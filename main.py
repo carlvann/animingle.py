@@ -54,6 +54,52 @@ class DiscordClient(discord.Client):
         res = [ anime['node']['title'] for anime in resp.json()['data'] ]
         return res
 
+    def get_user_summary(self, user):
+        """ Returns a summary of user infor
+
+            Username:
+
+            Total Anime Watched:
+            Completed:
+            Ongoing:
+            Dropped:
+            Upcomming:
+        """
+        req_url = f'https://api.myanimelist.net/v2/users/{user}/animelist?fields=list_status&limit=1000&sort=anime_title'
+        resp = requests.get(req_url, headers=self.HEADERS)
+        resp = resp.json()
+        resp_data = resp.get('data')
+
+        completed = 0
+        watching = 0
+        dropped = 0
+        upcomming = 0
+        other = 0
+
+        for anime in resp_data:
+            if anime['list_status']['status'] == 'watching':
+                watching += 1
+            elif anime['list_status']['status'] == 'completed':
+                completed += 1
+            elif anime['list_status']['status'] == 'dropped':
+                dropped += 1
+            elif anime['list_status']['status'] == 'plan_to_watch':
+                upcomming += 1
+            else:
+                other += 1
+
+        summary = {
+            'total_anime_watched': len(resp_data),
+            'completed': completed,
+            'ongoing': watching,
+            'dropped': dropped,
+            'upcomming': upcomming,
+            'other': other
+        }
+
+        pprint(summary)
+
+
     def _verify_msg(self, command):
 
         if command[1] not in self.ACCEPTABLE_COMMANDS:
@@ -71,8 +117,9 @@ class DiscordClient(discord.Client):
         elif command[1] == 'all':
             user = command[2]
             return self.get_all_anime(user)
-
-
+        elif command[1] == 'summary':
+            user = command[2]
+            return self.get_user_summary(user)
 
 
 def main():
