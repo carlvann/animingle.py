@@ -3,9 +3,12 @@ import discord
 import requests
 import os
 
+import sqlite3
+
 from dotenv import load_dotenv
 
 from constants import ACCEPTABLE_BANGS, ACCEPTABLE_COMMANDS, HEADERS, IGNORED_USERS
+
 
 load_dotenv()
 
@@ -118,7 +121,18 @@ def process_msg(command):
         return get_user_summary(user)
 
 
+def setup_database():
+    con = sqlite3.connect("animingle.db")
+    cur = con.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS Users(name)")
+    cur.execute("CREATE TABLE IF NOT EXISTS Anime(name)")
+    cur.execute("CREATE TABLE IF NOT EXISTS WatchStatus(user_id, anime_id, name, status, last_updated)")
+
+
 def main():
+
+    setup_database()
+
     intents = discord.Intents.all()
 
     dc = DiscordClient(intents=intents)
